@@ -1,0 +1,288 @@
+---
+title: "Too Many Books, Too Little Time"
+author: "Lindsay"
+date: "February 22, 2019"
+output: 
+ html_document:
+    number_sections: true
+    toc: true
+    toc_float: true
+    theme: spacelab
+---
+
+<!-- output:  -->
+<!--   html_document: -->
+<!--       toc: true -->
+<!--       theme: cayman -->
+<!--       toc_float: true -->
+
+
+
+
+```{r include = FALSE}
+library(tidyverse)
+library(xtable)
+library(knitr)
+library(kableExtra)
+library(prettydoc)
+library(ggimage)
+
+setwd("C:/Users/Lindsay/Desktop/Project/Goodbooks")
+lindsay_goodreads <- read.csv(file="goodreads_library_export (3).csv")
+glimpse(lindsay_goodreads)
+
+options(xtable.floating = FALSE)
+options(xtable.timestamp = "")
+```
+# Why books?
+
+  Welcome to my first exploratory data analysis! I thought for my first time I would delve into a familiar place: *books*. I've always loved reading and learning new things about books through data has been exciting. It turns out that the website [Goodreads](https://www.goodreads.com/), which I've used to rate books that I've read, collects data from other users as well! So let's set out to dig deeper into a topic that I have some domain knowledge. 
+
+  In R, there are many different packages you can leverage to accomplish your goals. The `tidyverse` is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structure which makes analysis all the more intuitive. 
+
+![ ](http://www.dicook.org/files/rstudio/img/tidyverse.png)
+  
+## Goodreads Data
+
+  Goodreads collects data on every book as well as every user. You can download your personal information from the website. The data comes in a `.csv.` (comma seperated values) format, so we'll leverage the `read.csv` function to bring the data in our environment.
+
+  I'm real curious to see the distribution of the books I rated. When I created this table below, I realized there were ratings of 0 and I knew I had never rated anything 0. Let's go ahead and scrub this data clean of any ratings of 0. We can do this with `filter` in `dplyr`, a package within the `tidyverse`. If you're familar with SQL, this is similar to a where clause.
+  
+```{r Freq_Table, echo=FALSE, results='asis'}
+
+
+rating_dist <- lindsay_goodreads %>% 
+  select(Title, My.Rating) %>% 
+  filter(My.Rating >0) %>% 
+  count(My.Rating) %>% 
+  rename(`My Rating` = My.Rating, `Number Of Books` = n)
+
+cat("
+<style>
+caption {
+      color: black;
+      font-style: italic;
+      font-size: 1.2em;
+text-decoration: underline;
+    }
+</style>
+")
+
+rating_dist %>%
+  kable(format = "html",caption = "Frequency Table of Ratings") %>%
+  kable_styling(bootstrap_options  = "striped", full_width = F)
+
+# position = "float_right")
+  
+```
+
+
+I've always wondered if I was more harsh in my ratings than the average reviewer. Let's compare my ratings with the average rating on the website of everyone else. Here, I also add a column to show how different mine are from the masses. 
+
+```{r echo=FALSE, results='asis'}
+
+rating_avgs <- lindsay_goodreads %>% 
+  select(Title, My.Rating, Average.Rating) %>% 
+  mutate(difference = My.Rating - Average.Rating) %>% 
+  arrange(My.Rating) %>% 
+  filter(My.Rating > 0) %>% 
+  summarize(`Mean of My Rating` = round(mean(My.Rating),2),
+            `Mean Average Rating` = round(mean(Average.Rating),2),
+            `Difference` = round(sum(difference),2))
+  
+
+rating_avgs %>%
+  kable(format = "html",caption = "Comparison of Ratings") %>%
+  kable_styling(bootstrap_options  = "striped", full_width = F)
+```
+ 
+---
+##Publishers are complicated
+ 
+I could also find out if there's a correlation between publisher and ratings. However, some of the publisher names are duplicates, just in different words. As you can see, $\color{blue}{\text{Scholastic}}$ and $\color{blue}{\text{Houghton}}$ 
+are represented in the table multiple times under different names. We can fix that by renaming the publishers so that they conform to one naming convention.
+
+![ ](https://i.imgur.com/7CQd4.gif)
+ 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+top_publishers <- lindsay_goodreads %>%
+  select(Publisher, Average.Rating) %>%
+  group_by(Publisher) %>%
+  summarise(`Average Publisher Rating` = round(mean(Average.Rating),2)) %>% 
+  top_n(10) %>%
+  arrange(desc(`Average Publisher Rating`))
+
+top_publishers %>%
+  kable(format = "html",caption = "Top 10 Publishers") %>%
+  kable_styling(bootstrap_options  = "striped", full_width = F)
+
+
+```
+
+  Now we have to correct the names of our publishers so we can accurately represent the data. First, I had to pull the list of publishers and see which ones needed to be combinded. The easiest way to combine publishers is using `case_when` to list out each name that I wanted to combine. When I generate the new table, the results are completely different and hopefully, more accurate and representative of the data. 
+  
+  
+  
+  
+  
+  
+  
+  grepl
+  
+  
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+publisher_fix <- lindsay_goodreads %>%
+  arrange(Publisher) %>% 
+  mutate(Publisher2 = case_when(grepl('Scho',Publisher) ~ 'Scholastic',
+                                grepl('Peng',Publisher) ~ 'Penguin',
+                                grepl('Bantam',Publisher) ~ 'Bantam',
+                                grepl('Dell',Publisher) ~ 'Dell',
+                                grepl('Houghton', Publisher) ~ 'Houghton Mifflin',
+                                grepl('Alfred', Publisher) ~ 'Alfred Knopf',
+                                grepl('Anchor', Publisher) ~ 'Anchor Books',
+                                grepl('Bantam', Publisher) ~ 'Bantam Books',
+                                grepl('Ballantine', Publisher) ~ 'Ballantine Books',
+                                grepl('Del Rey', Publisher) ~ 'Del Rey Books',
+                                grepl('Delacorte', Publisher) ~ 'Delacourte Books',
+                                grepl('Dell', Publisher) ~ 'Dell Publishing',
+                                grepl('Doubleday', Publisher) ~ 'Doubleday Books',
+                                grepl('Dutton', Publisher) ~ 'Dutton Books',
+                                grepl('HarperCollins', Publisher) ~ 'HarperCollins',
+                                grepl('Mulholland', Publisher) ~ 'Mulholland Books',
+                                grepl('New English', Publisher) ~ 'New English Library',
+                                grepl('Random', Publisher) ~ 'Random House',
+                                grepl('Yearling', Publisher) ~ 'Yearling Books',
+                                TRUE ~ as.character(Publisher)))
+
+top_publishers_fixed <- publisher_fix %>%
+  select(Publisher2, Average.Rating) %>%
+  group_by(Publisher2) %>%
+  summarise(`Average Publisher Rating` = round(mean(Average.Rating),2)) %>% 
+  top_n(10) %>%
+  arrange(desc(`Average Publisher Rating`)) %>% 
+  rename(`Publisher` = Publisher2)
+
+
+top_publishers_fixed %>%
+  kable(format = "html",caption = "Top 10 Publishers") %>%
+# lindsay_goodreads %>% 
+#   # filter(grepl('Houghton',Publisher)) %>% 
+#   distinct(Publisher) %>% 
+#   arrange(Publisher)
+  kable_styling(bootstrap_options  = "striped", full_width = F)
+
+
+
+
+```
+
+##Bindings and Box plots 
+  After finding correlations with publishers, I wondered if the type of binding had anything to do with the number of pages. Let's try to inspect a few summary statistics to gain some more insights. By taking the average of the number of pages, I can see if certain bindings tend to have more or less pages. It looks like mass market paperback books have the most pages on average, which makes sense, as they are usually smaller. 
+  
+  As expected, we see that the smaller sized pages Kindle versions have lead to the necessity for more pages. Interestingly, there's a large difference between `Mass Market Paperback` and `Paperback`.
+  
+  Many books are released only in paperback. They generally are 5" wide x 8 " long x 1" in depth. Mass Market paperbacks are smaller and generally are 4" x 6.5" with varied depths. This explains the page difference!
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+bindings <- lindsay_goodreads %>% 
+  select(Binding, Number.of.Pages) %>% 
+  group_by(Binding) %>% 
+  summarise(`Average Pages` = round(mean(Number.of.Pages),0)) %>% 
+  arrange(desc(`Average Pages`))
+
+bindings %>%
+  kable(format = "html",caption = "Bindings by Pages") %>%
+  kable_styling(bootstrap_options  = "striped", full_width = F)
+
+```
+   Summary statistics don't always tell you the whole story, so it's always a good idea to visualize the data. [Anscombe's Quartet](https://www.r-bloggers.com/using-and-abusing-data-visualization-anscombes-quartet-and-cheating-bonferroni/) shows just how different data can be even if the basic statistics are the same. Francis Anscombe built four datasets with different `x` and `y` values which have the same mean, median, standard deviation, and correlation coeffeicient. However, upon further inspection, each of the four datasets look very different when graphed. 
+
+  That being said, let's create a box plot by using `geom_boxplot` in `ggplot2` to show each book by it's binding. This shows the range of pages as well as compare the median between each binding. A box plot is a good way to see how the data is spread out. It shows the data as it is broken into quartiles (each one being a percentage of the data) and it's outliers (colored in `red`). This way you can easily see where most of books are in each group. The bindings are broken out into separate plots which makes it easy to compare.  
+  
+  Each book can be described by what kind of binding the book is. These are the following types of bindings we have in our data : ``r unique(lindsay_goodreads$Binding)``. It turns out Audio Casette and ebook only had a few books to their name, so we'll remove them from the visualtion beloiw.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+`%not_in%` <- purrr::negate(`%in%`)
+
+# unique(lindsay_goodreads$Binding)
+
+
+lindsay_goodreads %>% 
+  filter(Binding %not_in% c('Audio Cassette', 'ebook')) %>% 
+  ggplot( aes(x=Binding, y=Number.of.Pages)) +
+  geom_jitter(width = 0.1) +
+  geom_boxplot(colour = "#3366FF",outlier.colour = "red") 
+
+
+```
+
+
+
+#New Data!
+
+```{r include=FALSE}
+book_tags <- read_csv('book_tags.csv')
+books <- read_csv('books.csv')
+to_read <- read_csv('to_read.csv')
+ratings <- read_csv('ratings.csv')
+```
+
+In addition to my personal data, I found some datasets on some more general information on books. There is a lot of data to look through and it was fun trying to find interesting relationships. Below, I find the five top rated books as well as each authors average rating.  
+
+```{r echo=FALSE}
+#Top 5 books by ratingg
+books_sorted <- books %>% 
+  arrange(desc(average_rating)) %>% 
+  # take top 5 rows
+  top_n(5, average_rating) %>%
+  #select columns needed
+  select(title, average_rating)
+
+books_sorted %>%
+  kable(format = "html",caption = "Top 5 Books") %>%
+  kable_styling(bootstrap_options  = "striped", full_width = F)
+
+#Average rating by author
+author_ratings <- books %>%
+  arrange(desc(average_rating)) %>% 
+  top_n(5, average_rating) %>%
+  group_by(authors) %>%
+  summarize(avg_rating = mean(average_rating, na.rm=TRUE)) %>% 
+  arrange(desc(avg_rating)) 
+
+author_ratings %>%
+  kable(format = "html",caption = "Author Ratings") %>%
+  kable_styling(bootstrap_options  = "striped", full_width = F)
+```
+
+After findingg the top rated books by title, I thought it would be interesting to use the image_url column and add the books picture to a plot. To do that, I bulid the plot with `ggplot` and then add a `ggimage` layer. Luckily, my dataset contains a corresponding url for most of the books already, making it easy to add the image to my plot. I think it makes it more interesting to look at than just regular dots. 
+
+```{r echo=FALSE}
+ books %>% 
+  arrange(desc(average_rating)) %>% 
+  top_n(10, average_rating) %>%
+  select(title, average_rating, image_url, ratings_count) %>% 
+  ggplot(aes(x = average_rating, y = ratings_count)) + 
+  geom_image(aes(image=image_url), size=.2)
+```
+
+  I thought it might be interesting to see if people tended to leave more text reviews for books they rated higher or maybe vice versa. I first made one wihout any restrictions, however, it didn't make much sense. most reviews landed between 3.5 and 4.5, so I just used that range for my plot. As you can see below, there really isn't much of a relationship though. most book have fewer than 5,000 text reviews and books at the low end and high end both have as many as 10,000 reviews. I fit a regression line to see if there was any trend, but the line's slope is relatively flat signifying no relationship.
+
+```{r echo=FALSE}
+#Plot of ratings by text reviews
+books %>% 
+  filter(work_text_reviews_count <  10000, average_rating >= 3.5, average_rating <= 4.5) %>% 
+  ggplot( aes(x=average_rating, y=work_text_reviews_count))+
+  geom_point()+
+  geom_jitter(width = .1) +
+  geom_smooth(method = lm,colour="red", size = 1)
+```
+
+#My Thoughts! 
+
+  After digging through the `Goodreads` data and exploring all the `tidyverse` has to offer, I learned about coding to answer questions as well as using RMarkdown. It was nice to have differrent datasets, one that even had personal data to learn more about one of my hobbies. I never knew you could learn so much about books with data! I learned how fascinating it can be to look at data and find ways to look at it that no one else could. 
+
+
