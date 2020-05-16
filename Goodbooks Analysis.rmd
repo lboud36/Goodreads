@@ -1,7 +1,7 @@
 ---
 title: "Too Many Books, Too Little Time"
-author: "Lindsay"
-date: "February 22, 2019"
+author: "Lindsay Otto"
+date: "March 22, 2019"
 indent: true
 header-includes:
   - \setlength{\parindent}{4em}
@@ -38,11 +38,11 @@ glimpse(lindsay_goodreads)
 options(xtable.floating = FALSE)
 options(xtable.timestamp = "")
 ```
-# My Favorite Pasttime - Books! {-}
+# My Favorite Pastime - Books! {-}
 
-  > Welcome to my first exploratory data analysis! I thought for my first time I would delve into a familiar place: *books*. I've always loved reading and learning new things about books through data has been exciting. It turns out that the website [Goodreads](https://www.goodreads.com/), which I've used to rate books that I've read, collects data from other users as well! So, let's set out to dig deeper into a topic that I have some domain knowledge. 
+  > Welcome to my first exploratory data analysis! I thought for my first time I would delve into a familiar place: *books*. I've always loved reading so learning new things about books through data has been exciting. It turns out that the website [Goodreads](https://www.goodreads.com/), which I've used to rate books that I've read, collects data from other users as well! So, let's set out to dig deeper into a topic that I have some domain knowledge in. 
 
-  In R, there are many different packages you can leverage to accomplish your goals. The `tidyverse` is a collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structure which makes analysis all the more intuitive. 
+  In R, there are many different packages you can leverage to accomplish your goals. The `tidyverse` is a collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structure which makes analysis all the more intuitive. In my EDA, I use several different aspects of the tidyverse to complete my analysis. 
 
 ![ ](http://www.dicook.org/files/rstudio/img/tidyverse.png)
 
@@ -50,9 +50,9 @@ options(xtable.timestamp = "")
   
 ## Lindsay's Reviewed Books {-}
 
-  Goodreads collects data on every book as well as every user. You can download your personal information from the website. The data comes in a `.csv.` (comma separated values) format, so we'll leverage the `read.csv` function to bring the data in our environment.
+  Goodreads collects data on every book as well as every user. You can download your personal information from the website. The data comes in a `.csv.` (comma separated values) format, so we'll leverage the `read.csv` function to bring the data into our environment.
 
-  I'm real curious to see the distribution of the books I rated. When I created this table below, I realized there were ratings of 0 and I knew I had never rated anything 0. Let's go ahead and scrub this data clean of any ratings of 0. We can do this with `filter` in `dplyr`, a package within the `tidyverse`. If you're familiar with SQL, this is similar to a where clause.
+  I'm really curious to see the distribution of the books I rated. When I created this table below, I realized there were ratings of 0 and I knew I had never rated anything 0. Let's go ahead and scrub this data clean of any ratings of 0. We can do this with `filter` in `dplyr`, a package within the `tidyverse`. If you're familiar with SQL, this is similar to a where clause.
   
   The table below is pretty close to what I was expecting. I rarely rate books at 1 or 2 and I usually give a rating of 4. However, I was surprised at how many perfect 5 star ratings I gave.
   
@@ -107,7 +107,7 @@ rating_avgs %>%
 ---
 ##Publishers and Naming Conventions{-}
  
-  Sometimes messy or unorganized data can make you feel like you walked into a room that's on fire. Never fear, we can fix our data issues by renaming the publishers so that they conform to one naming convention. However, some of the publisher names are duplicates, just in different words. As you can see, `Scholastic` and `Houghton` are represented in the table multiple times under different names. 
+  Sometimes messy or unorganized data can make you feel like you walked into a room that's on fire. Never fear, we can fix our data issues by renaming the publishers so that they conform to one naming convention. However, some of the publisher names are duplicates, just in different words. As you can see, `Scholastic` and `Houghton` are represented in the table multiple times under different names. Remember, these are just the publishers of books I've rated on Goodreads.
 
 <!-- $\color{blue}{\text{Scholastic}}$ and $\color{blue}{\text{Houghton}}$  -->
 
@@ -132,7 +132,7 @@ top_publishers %>%
 
 ```
 
-  Now we can correct the names of our publishers, so that we can accurately represent the data. First, let's had to pull the list of publishers and see which ones needed to be combined. The easiest way to combine publishers is using the function `case_when` to list out each name that needs to be combined. When the new table is generated, the results are completely different and hopefully, more accurate and representative of the data. The new table looks much better now and doesn't contain any duplicates. 
+  Now we can correct the names of our publishers, so that we can accurately represent the data. First, let's pull the list of publishers and see which ones needed to be combined. The easiest way to combine publishers is using the function `case_when` to list out each name that needs to be combined. When the new table is generated, the results are completely different and hopefully, more accurate and representative of the data. The new table looks much better now and doesn't contain any duplicates. 
   
   
 
@@ -151,10 +151,9 @@ publisher_fix <- lindsay_goodreads %>%
                                 grepl('Ballantine', Publisher) ~ 'Ballantine Books',
                                 grepl('Del Rey', Publisher) ~ 'Del Rey Books',
                                 grepl('Delacorte', Publisher) ~ 'Delacourte Books',
-                                grepl('Dell', Publisher) ~ 'Dell Publishing',
                                 grepl('Doubleday', Publisher) ~ 'Doubleday Books',
                                 grepl('Dutton', Publisher) ~ 'Dutton Books',
-                                grepl('HarperCollins', Publisher) ~ 'HarperCollins',
+                                grepl('HarperCollins', Publisher) ~ 'HarperCollins Publishers',
                                 grepl('Mulholland', Publisher) ~ 'Mulholland Books',
                                 grepl('New English', Publisher) ~ 'New English Library',
                                 grepl('Random', Publisher) ~ 'Random House',
@@ -182,7 +181,7 @@ top_publishers_fixed %>%
 *** 
  
 ##Bindings and Box plots {-}
-  In the Goodreads data, we have a field that described the type of binding I wondered if the type of binding had anything to do with the number of pages. These are the following types of bindings we have in our data : ``r unique(lindsay_goodreads$Binding)``.
+  In the Goodreads data, we have a field that describes the type of binding. I wondered if the type of binding had anything to do with the number of pages in a book. These are the following types of bindings we have in our data : ``r unique(lindsay_goodreads$Binding)``.
   
   Let's try to inspect a few summary statistics to gain some more insights. By taking the average of the number of pages in book for a certain binding type, I can see if certain bindings tend to have more or less pages. It looks like mass market paperback books have the most pages on average, which makes sense, as they are usually smaller. 
   
@@ -204,7 +203,7 @@ bindings %>%
 ```
    Summary statistics don't always tell you the whole story, so it's always a good idea to visualize the data. [Anscombe's Quartet](https://www.r-bloggers.com/using-and-abusing-data-visualization-anscombes-quartet-and-cheating-bonferroni/) shows just how different data can be even if the basic statistics are the same. Francis Anscombe built four data sets with different `x` and `y` values which have the same mean, median, standard deviation, and correlation coefficient. However, upon further inspection, each of the four data sets look very different when graphed. 
 
-  That being said, let's create a box plot by using `geom_boxplot` in `ggplot2` to show each book by it's binding. This shows the range of pages as well as compare the median between each binding. A box plot is a good way to see how the data is spread out. It shows the data as it is broken into quartiles (each one being a percentage of the data) and it's outliers (colored in `red`). This way you can easily see where most of books are in each group. The bindings are broken out into separate plots which makes it easy to compare.  
+  That being said, let's create a box plot by using `geom_boxplot` in `ggplot2` to show each book by it's binding. This shows the range of pages as well as compares the median between each binding. A box plot is a good way to see how the data is spread out. It shows the data as it is broken into quartiles (each one being a percentage of the data) and it's outliers (colored in `red`). This way you can easily see where most of books are in each group. The bindings are broken out into separate plots which makes it easy to compare.  
   
   Each book can be described by what kind of binding the book is. Once again, these are the following types of bindings we have in our data : ``r unique(lindsay_goodreads$Binding)``. It turns out Audio Cassette and ebook only had a few books to their name, so we'll remove them from the visualization below.
 
@@ -237,7 +236,7 @@ to_read <- read_csv('to_read.csv')
 ratings <- read_csv('ratings.csv')
 ```
 
-In addition to my personal data, I found data for all users on Goodreads and general information on books that are reviewed on the website. There is a lot of data to look through and so let's dig in! Below, I find the five top rated books as well as each authors average rating. It looks like Calvin and Hobbes readers sure do love everything that Bill Watterson writes, since we find both in the top 5! When scrolling through the top authors, I found a name that I was unfamiliar with - [Hafez](https://en.wikipedia.org/wiki/Hafez). Turns out he was an Iranian 14th century poet who wrote many famous love poems. He is even enshrined in Tehran, Iran! 
+In addition to my personal data, I found data for all users on Goodreads and general information on books that are reviewed on the website. There is a lot of data to look through so let's dig in! Below, I find the five top rated books as well as each authors average rating. It looks like Calvin and Hobbes readers sure do love everything that Bill Watterson writes since we find both in the top 5! When scrolling through the top authors, I found a name that I was unfamiliar with - [Hafez](https://en.wikipedia.org/wiki/Hafez). Turns out he was an Iranian 14th century poet who wrote many famous love poems. He is even enshrined in Tehran, Iran! 
 
 ```{r echo=FALSE}
 #Top 5 books by rating
@@ -268,7 +267,7 @@ author_ratings %>%
   kable_styling(bootstrap_options  = "striped", full_width = F)
 ```
 
-  After finding the top rated books and authors, I thought it would be interesting to use the image_url column and add the books picture to a plot. To do that, we can build the plot with `ggplot`. Let's see if there's a correlation between the quality of the ratings and how many ratings, or how popular, a certain book is. If we take the books that have more than 1 million reviews, we see a slight positive correlation between the two.
+  After finding the top rated books and authors, I thought it would be interesting to use the image_url column and add the books picture to a plot. To do that, we can build the plot with `ggplot`. However, the url's were not very high quality and the graph did not look good enough to keep. Some of the image didn't even have the book cover. Instead, let's see if there's a correlation between the quality of the ratings and how many ratings, or how popular, a certain book is. If we take the books that have more than 1 million reviews, we see a slight positive correlation between the two.
 
 ```{r echo=FALSE}
  books %>% 
@@ -286,7 +285,7 @@ author_ratings %>%
   # geom_image(aes(image=small_image_url), size=.2)
 ```
 
-  I thought it might be interesting to see if people tended to leave more text reviews for books they rated higher or maybe vice versa. I first made one without any restrictions, however, it didn't make much sense. Most reviews landed between 3.5 and 4.5, so I just used that range for my plot. As you can see below, there really isn't much of a relationship though.  I fit a regression line to see if there was any trend, but the line's slope is relatively flat signifying no relationship. In conclusion, the rating of book doesn't affect whether or not someone will write a text review, but does affect if someone will lazily assign a quick number (guilty as charged for some books!). 
+  I thought it might be interesting to see if people tended to leave more text reviews for books they rated higher or maybe vice versa. I first made one without any restrictions, however, it didn't make much sense. Most reviews landed between `3.5` and `4.5`, so I just used that range for my plot. As you can see below, there really isn't much of a relationship though.  I fit a regression line to see if there was any trend, but the line's slope is relatively flat signifying no relationship. In conclusion, the rating of a book doesn't affect whether or not someone will write a text review, but does affect if someone will lazily assign a quick number (guilty as charged for some books!). 
 
 ```{r echo=FALSE}
 #Plot of ratings by text reviews
@@ -303,6 +302,6 @@ books %>%
 
 #From Cover to Cover{-}
 
-  After digging through the `Goodreads` data and exploring all the `tidyverse` has to offer, I learned about coding to answer questions as well as using R Markdown. It was nice to have different data sets, one that even had personal data to learn more about one of my hobbies. I never knew you could learn so much about books with data! I learned how fascinating it can be to look at data and find ways to look at it that no one else could. 
+  After digging through the `Goodreads` data and exploring all the `tidyverse` has to offer, I learned how useful it was to present information using `RMarkdown`. It was nice to have different data sets - one that even had personal data to learn more about one of my hobbies. I got to see how different bindings affects how many pages a book has, specficially how different paperbacks are from mass market paperbacks. One of the more interesting results was the analysis of the reviews from all the books on the site. There was a slightly positive correlation between the number of ratings and the average rating and no correlation between the number of text reviews compared to the averae rating. I thought higher rated books would have more test reviews since a user might have more to say, however, that didn't turn out to be the case. Of course, I also learned about my own habits on Goodreads. I've read a lot of books in my life and I'm not surprised I rate them highly for the most part. Almost every book I've read has contributed to my love of reading and it's very difficult to find a book I dislike! It's always fascinating to explore the data and find information that no one else was aware of! Thanks for taking time to read through my journey to understand the data Goodreads has to offer!
 
 
